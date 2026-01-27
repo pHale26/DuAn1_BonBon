@@ -110,22 +110,30 @@ error_log("Order detail page - currentOrderId: $currentOrderId, order['id']: " .
                     <h5 class="fw-bold mb-3">
                         <i class="bi bi-truck me-2"></i>Thông tin giao hàng
                     </h5>
-                    <div class="mb-2">
-                        <strong class="text-muted small">Người nhận:</strong>
-                        <p class="mb-0"><?= htmlspecialchars($order['fullname']) ?></p>
+                    <div class="row mb-2">
+                        <div class="col-4 text-muted small">Người nhận:</div>
+                        <div class="col-8 fw-medium"><?= htmlspecialchars($order['fullname']) ?></div>
                     </div>
-                    <div class="mb-2">
-                        <strong class="text-muted small">Số điện thoại:</strong>
-                        <p class="mb-0"><?= htmlspecialchars($order['phone']) ?></p>
+                    <div class="row mb-2">
+                        <div class="col-4 text-muted small">Điện thoại:</div>
+                        <div class="col-8"><?= htmlspecialchars($order['phone']) ?></div>
                     </div>
-                    <div class="mb-2">
-                        <strong class="text-muted small">Email:</strong>
-                        <p class="mb-0"><?= htmlspecialchars($order['email']) ?></p>
+                    <div class="row mb-2">
+                        <div class="col-4 text-muted small">Email:</div>
+                        <div class="col-8 text-break"><?= htmlspecialchars($order['email']) ?></div>
                     </div>
-                    <div class="mb-0">
-                        <strong class="text-muted small">Địa chỉ:</strong>
-                        <p class="mb-0"><?= htmlspecialchars($order['address']) ?></p>
-                        <p class="mb-0 text-muted small"><?= htmlspecialchars(($order['ward'] ?? '') . ', ' . ($order['district'] ?? '') . ', ' . ($order['city'] ?? '')) ?></p>
+                    <div class="row mb-0">
+                        <div class="col-4 text-muted small">Địa chỉ:</div>
+                        <div class="col-8">
+                            <div><?= htmlspecialchars($order['address']) ?></div>
+                            <?php 
+                                $addrParts = array_filter([$order['ward'] ?? '', $order['district'] ?? '', $order['city'] ?? ''], function($v) { return !empty($v); });
+                                $fullAddr = implode(', ', $addrParts);
+                            ?>
+                            <?php if ($fullAddr): ?>
+                            <div class="text-muted small"><?= htmlspecialchars($fullAddr) ?></div>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
 
@@ -230,22 +238,43 @@ error_log("Order detail page - currentOrderId: $currentOrderId, order['id']: " .
             <!-- Cột phải: danh sách sản phẩm + ghi chú -->
             <div class="col-lg-8">
                 <div class="order-items-card mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold mb-0">Sản phẩm</h5>
-                        <div class="text-muted">
-                            <?php if (!empty($order['discount_amount']) && $order['discount_amount'] > 0): ?>
-                                <div class="text-end">
-                                    <div class="small text-muted">Tạm tính: <?= number_format($order['total_amount'] + $order['discount_amount'], 0, ',', '.') ?> đ</div>
-                                    <?php if (!empty($order['coupon_code'])): ?>
-                                        <div class="small text-dark">Mã giảm giá: <?= htmlspecialchars($order['coupon_code']) ?> (<?= htmlspecialchars($order['coupon_name'] ?? '') ?>)</div>
-                                        <div class="small text-dark">Giảm: -<?= number_format($order['discount_amount'], 0, ',', '.') ?> đ</div>
-                                    <?php endif; ?>
-                                    <div class="fw-bold">Tổng cộng: <?= number_format($order['total_amount'], 0, ',', '.') ?> đ</div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="fw-bold mb-0 mt-1">Đơn hàng</h5>
+                        <?php if ($canCancel): ?>
+                            <div class="flex-grow-1 ms-4 d-flex justify-content-end">
+                                <div id="initCancelOrderContainer">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" id="initCancelOrderBtn">
+                                        Hủy đơn hàng
+                                    </button>
                                 </div>
-                            <?php else: ?>
-                                <div class="text-end">Tổng cộng: <strong><?= number_format($order['total_amount'], 0, ',', '.') ?> đ</strong></div>
-                            <?php endif; ?>
-                        </div>
+                                
+                                <div id="cancelOrderSection" style="display:none; width: 100%; max-width: 450px;" class="card p-3 shadow-sm border-danger">
+                                    <h6 class="fw-bold mb-3 small text-uppercase text-danger border-bottom pb-2">Xác nhận hủy đơn hàng</h6>
+                                    <form method="POST" action="<?= BASE_URL ?>?action=order-cancel" onsubmit="return validateCancelReason()">
+                                        <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
+                                        <div class="mb-2">
+                                            <label class="form-label small text-muted">Lý do hủy <span class="text-danger">*</span></label>
+                                            <select class="form-select form-select-sm" name="reason_predefined" id="cancelReasonSelect" required>
+                                                <option value="">-- Chọn lý do --</option>
+                                                <option value="Chọn nhầm sản phẩm">Chọn nhầm sản phẩm</option>
+                                                <option value="Muốn cập nhật địa chỉ/SDT">Muốn cập nhật địa chỉ/SDT</option>
+                                                <option value="Thay đổi phương thức thanh toán">Thay đổi phương thức thanh toán</option>
+                                                <option value="Thời gian giao hàng không phù hợp">Thời gian giao hàng không phù hợp</option>
+                                                <option value="Lý do khác">Lý do khác</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-2" id="cancelReasonOtherWrap" style="display:none;">
+                                            <label class="form-label small text-muted">Lý do khác</label>
+                                            <textarea class="form-control form-control-sm" name="reason_other" rows="2" placeholder="Nhập lý do..."></textarea>
+                                        </div>
+                                        <div class="d-flex justify-content-end gap-2 mt-2">
+                                            <button type="button" class="btn btn-secondary btn-sm" id="cancelOrderBackBtn">Hủy bỏ</button>
+                                            <button type="submit" class="btn btn-danger btn-sm">Xác nhận</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
                     <div class="table-responsive">
                         <table class="table align-middle">
@@ -430,36 +459,27 @@ error_log("Order detail page - currentOrderId: $currentOrderId, order['id']: " .
                                     <?php endif; ?>
                                 <?php endforeach; ?>
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="5" class="text-end pt-3">
+                                        <?php if (!empty($order['discount_amount']) && $order['discount_amount'] > 0): ?>
+                                            <div class="small text-muted">Tạm tính: <?= number_format($order['total_amount'] + $order['discount_amount'], 0, ',', '.') ?> đ</div>
+                                            <?php if (!empty($order['coupon_code'])): ?>
+                                                <div class="small text-dark">Mã giảm giá: <?= htmlspecialchars($order['coupon_code']) ?> (<?= htmlspecialchars($order['coupon_name'] ?? '') ?>)</div>
+                                                <div class="small text-dark">Giảm: -<?= number_format($order['discount_amount'], 0, ',', '.') ?> đ</div>
+                                            <?php endif; ?>
+                                            <div class="fw-bold fs-5 text-dark mt-1">Tổng cộng: <?= number_format($order['total_amount'], 0, ',', '.') ?> đ</div>
+                                        <?php else: ?>
+                                            <div class="fs-5 text-dark">Tổng cộng: <strong><?= number_format($order['total_amount'], 0, ',', '.') ?> đ</strong></div>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
-                    
-                    <?php if ($canCancel): ?>
-                        <hr class="my-4">
-                        <div class="mt-4">
-                            <h6 class="fw-bold mb-3">Hủy đơn hàng</h6>
-                            <form method="POST" action="<?= BASE_URL ?>?action=order-cancel" onsubmit="return validateCancelReason()">
-                                <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label small text-uppercase">Lý do hủy <span class="text-danger">*</span></label>
-                                        <select class="form-select" name="reason_predefined" id="cancelReasonSelect" required>
-                                            <option value="">-- Chọn lý do --</option>
-                                            <option value="Chọn nhầm sản phẩm">Chọn nhầm sản phẩm</option>
-                                            <option value="Muốn cập nhật địa chỉ/SDT">Muốn cập nhật địa chỉ/SDT</option>
-                                            <option value="Thay đổi phương thức thanh toán">Thay đổi phương thức thanh toán</option>
-                                            <option value="Thời gian giao hàng không phù hợp">Thời gian giao hàng không phù hợp</option>
-                                            <option value="Lý do khác">Lý do khác</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6 mb-3" id="cancelReasonOtherWrap" style="display:none;">
-                                        <label class="form-label small text-uppercase">Lý do khác</label>
-                                        <textarea class="form-control" name="reason_other" rows="3" placeholder="Nhập lý do khác (tối thiểu 5 ký tự)"></textarea>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-outline-danger">Hủy đơn hàng</button>
-                            </form>
-                        </div>
-                    <?php endif; ?>
+
+                    <!-- Tổng tiền -->
+
                 </div>
 
                 <?php if (!empty($order['note'])): ?>
@@ -1027,6 +1047,26 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 otherWrap.style.display = 'none';
             }
+        });
+    }
+
+    // Toggle form hủy đơn hàng
+    const initBtn = document.getElementById('initCancelOrderBtn');
+    const cancelContainer = document.getElementById('initCancelOrderContainer');
+    const cancelSection = document.getElementById('cancelOrderSection');
+    const backBtn = document.getElementById('cancelOrderBackBtn');
+
+    if (initBtn && cancelSection) {
+        initBtn.addEventListener('click', function() {
+            if (cancelContainer) cancelContainer.style.display = 'none';
+            cancelSection.style.display = 'block';
+        });
+    }
+
+    if (backBtn && cancelContainer) {
+        backBtn.addEventListener('click', function() {
+            cancelSection.style.display = 'none';
+            if (cancelContainer) cancelContainer.style.display = 'block';
         });
     }
 });
