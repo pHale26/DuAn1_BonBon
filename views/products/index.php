@@ -154,8 +154,8 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content pm-modal shadow-lg border-0 overflow-hidden">
             <div class="row g-0 h-100">
-                <div class="col-md-6 pm-left">
-                    <img id="pmProductImage" src="" alt="Product" class="pm-image">
+                <div class="col-md-6 pm-left" style="height: 400px; min-height: 400px; max-height: 400px;">
+                    <img id="pmProductImage" src="" alt="Product" class="pm-image" style="width: 100%; height: 100%; object-fit: cover; object-position: center; border-radius: 8px; display: block;">
                 </div>
                 <div class="col-md-6 pm-right position-relative">
                     <button type="button" class="btn-close pm-close" data-bs-dismiss="modal" aria-label="Close"></button>

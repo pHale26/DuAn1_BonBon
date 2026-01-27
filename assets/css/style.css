@@ -2657,8 +2657,10 @@ input[type="number"] {
     width: 100%;
     height: 280px;
     object-fit: cover;
+    object-position: center;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 0;
+    display: block;
 }
 
 .product-card:hover img {
@@ -3841,8 +3843,10 @@ input[type="number"] {
     width: 100%;
     height: 560px;
     object-fit: cover;
+    object-position: center;
     border-radius: 12px;
     margin-bottom: 16px;
+    display: block;
 }
 
 .product-thumbnails {
@@ -4194,8 +4198,10 @@ input[type="number"] {
     width: 100%;
     height: 600px;
     object-fit: cover;
+    object-position: center;
     border-radius: 12px;
     margin-bottom: 20px;
+    display: block;
 }
 
 .product-thumbnails {
@@ -8525,7 +8531,7 @@ input[type="number"] {
     align-items: center;
     justify-content: center;
     padding: 0.75rem;
-    min-height: 500px;
+    height: 500px;
     overflow: hidden;
     flex: 0 0 50%;
     max-width: 50%;
@@ -8538,7 +8544,7 @@ input[type="number"] {
     max-height: 100%;
     object-fit: cover;
     object-position: center;
-    border-radius: 0;
+    border-radius: 8px;
 }
 
 .pm-right {
@@ -9953,12 +9959,16 @@ textarea.form-control {
     margin-bottom: 10px;
 }
 
-.modal-product-image {
-    max-height: 70vh;
+.modal-product-image,
+.pm-image {
+    max-height: 500px;
     max-width: 100%;
     width: 100%;
-    object-fit: contain;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
     border-radius: 8px;
+    display: block;
 }
 
 .input-group-compact {
@@ -10482,4 +10492,187 @@ textarea.form-control {
         width: 95vw;
         right: -40px;
     }
+}
+/* Fix for consistent product image display */
+.product-card img,
+.product-card-image-wrapper img {
+    width: 100% !important;
+    height: 280px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+}
+
+.product-main-image {
+    width: 100% !important;
+    height: 560px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+}
+
+.product-thumbnail {
+    width: 80px !important;
+    height: 80px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+}
+
+/* Ensure product modal image is also consistent */
+.pm-image {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+}
+
+/* Fix for similar products in product detail page */
+.product-detail-section .product-card img {
+    width: 100% !important;
+    height: 280px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+}
+
+/* Ensure news card images are also consistent */
+.news-card img {
+    width: 100% !important;
+    height: 200px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+}
+/* Responsive adjustments for product images */
+@media (max-width: 768px) {
+    .product-card img,
+    .product-card-image-wrapper img {
+        height: 250px !important;
+    }
+    
+    .product-main-image {
+        height: 400px !important;
+    }
+    
+    .product-thumbnail {
+        width: 60px !important;
+        height: 60px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .product-card img,
+    .product-card-image-wrapper img {
+        height: 220px !important;
+    }
+    
+    .product-main-image {
+        height: 350px !important;
+    }
+    
+    .product-thumbnail {
+        width: 50px !important;
+        height: 50px !important;
+    }
+}
+/* Specific fixes for product modal image consistency */
+.modal .pm-modal .pm-left {
+    height: 500px !important;
+    min-height: 500px !important;
+    max-height: 500px !important;
+}
+
+.modal .pm-modal .pm-image,
+.modal .pm-modal img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border-radius: 8px !important;
+    display: block !important;
+}
+
+/* Fix for Bootstrap modal dialog */
+.modal-dialog .pm-modal {
+    height: auto !important;
+}
+
+.modal-dialog .pm-left {
+    aspect-ratio: 1 / 1;
+    height: 400px !important;
+}
+
+/* Responsive modal fixes */
+@media (max-width: 768px) {
+    .modal-dialog .pm-left {
+        height: 300px !important;
+    }
+    
+    .modal .pm-modal .pm-left {
+        height: 300px !important;
+        min-height: 300px !important;
+        max-height: 300px !important;
+    }
+}
+/* Additional fixes for different modal layouts */
+.modal .col-md-5.pm-left,
+.modal .col-md-6.pm-left {
+    height: 400px !important;
+    min-height: 400px !important;
+    max-height: 400px !important;
+}
+
+.modal .col-md-5.pm-left img,
+.modal .col-md-6.pm-left img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border-radius: 8px !important;
+}
+
+/* Ensure modal content has proper height */
+.modal-content .row.g-0.h-100 {
+    min-height: 400px;
+}
+
+/* Force image aspect ratio in modal */
+#pmProductImage {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border-radius: 8px !important;
+    display: block !important;
+}
+/* Final override for all product images to ensure consistency */
+img[id="pmProductImage"] {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border-radius: 8px !important;
+    display: block !important;
+}
+
+/* Ensure container has proper dimensions */
+.pm-left[style*="height"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+/* Clear any conflicting styles */
+.modal img {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+.modal .pm-left img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
 }
