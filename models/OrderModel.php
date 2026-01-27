@@ -22,18 +22,18 @@ class OrderModel extends BaseModel
     private const STATUS_LABELS = [
         self::STATUS_UNPAID         => 'Chờ Thanh Toán',
         self::STATUS_PAID           => 'Đã Thanh Toán',
-        self::STATUS_PAYMENT_FAILED => 'Thanh toán thất bại',
+        self::STATUS_PAYMENT_FAILED => 'Thanh Toán Thất Bại',
         self::STATUS_PENDING        => 'Chờ Xác Nhận',
-        self::STATUS_CONFIRMED      => 'Xác Nhận Đơn Hàng',
-        self::STATUS_PREPARING      => 'Đang Chuẩn Bị Đơn Hàng',
-        self::STATUS_HANDED_TO_SHIPPER => 'Đã Giao Cho Đơn Vị Vận Chuyển',
+        self::STATUS_CONFIRMED      => 'Đã Xác Nhận',
+        self::STATUS_PREPARING      => 'Đang Chuẩn Bị',
+        self::STATUS_HANDED_TO_SHIPPER => 'Đã Giao Vận Chuyển',
         self::STATUS_SHIPPING       => 'Đang Vận Chuyển',
         self::STATUS_TO_SHIP        => 'Đang Giao',
-        self::STATUS_DELIVERED      => 'Đã Giao',
+        self::STATUS_DELIVERED      => 'Đã Giao Hàng',
         self::STATUS_COMPLETED      => 'Hoàn Thành',
         self::STATUS_CANCELLED      => 'Đã Hủy',
         self::STATUS_RETURNED       => 'Trả Hàng / Hoàn Tiền',
-        self::STATUS_CANCEL_REQUEST => 'Yêu cầu hủy',
+        self::STATUS_CANCEL_REQUEST => 'Yêu Cầu Hủy',
     ];
 
     // Map trạng thái -> màu sắc badge Bootstrap (phục vụ view)
@@ -604,7 +604,8 @@ class OrderModel extends BaseModel
             self::STATUS_PENDING,
             self::STATUS_CONFIRMED,
             self::STATUS_PREPARING,
-            self::STATUS_TO_SHIP
+            self::STATUS_TO_SHIP,
+            self::STATUS_HANDED_TO_SHIPPER
         ], true);
     }
 
