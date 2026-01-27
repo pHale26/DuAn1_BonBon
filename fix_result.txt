@@ -1,0 +1,9 @@
+rray
+(
+    [Field] => views
+    [Type] => int(11)
+    [Null] => YES
+    [Key] => 
+    [Default] => 0
+    [Extra] => 
+)
