@@ -180,7 +180,15 @@
                                                 // Đơn hoàn thành = đã thanh toán (kể cả COD)
                                                 $status === OrderModel::STATUS_COMPLETED;
                                         ?>
-                                        <?php if ($isPaid): ?>
+                                        <?php if ($status === OrderModel::STATUS_UNPAID): ?>
+                                            <span class="badge bg-<?= OrderModel::statusBadge($status) ?> px-3 py-2">
+                                                <i class="bi bi-clock me-1"></i><?= OrderModel::statusLabel($status) ?>
+                                            </span>
+                                        <?php elseif ($status === OrderModel::STATUS_PAYMENT_FAILED): ?>
+                                            <span class="badge bg-<?= OrderModel::statusBadge($status) ?> px-3 py-2">
+                                                <i class="bi bi-x-circle me-1"></i><?= OrderModel::statusLabel($status) ?>
+                                            </span>
+                                        <?php elseif ($isPaid): ?>
                                             <span class="badge bg-success px-3 py-2">
                                                 <i class="bi bi-check-circle me-1"></i>Đã thanh toán
                                             </span>

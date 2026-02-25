@@ -13,6 +13,7 @@ class UserModel extends BaseModel
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         return $user ?: null;
     }
+    
 
     public function create(array $data): int
     {
