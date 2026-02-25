@@ -95,12 +95,29 @@
                                             $pm = strtolower($order['payment_method'] ?? 'cod');
                                             $status = $order['status'];
                                             $ret = $returnMap[$order['id']] ?? null;
+                                            // determine next statuses for dropdown (same logic as controller)
+                                            $terminal = [
+                                                OrderModel::STATUS_DELIVERED,
+                                                OrderModel::STATUS_COMPLETED,
+                                                OrderModel::STATUS_CANCELLED,
+                                                OrderModel::STATUS_RETURNED,
+                                            ];
+                                            $nextStatuses = [];
+                                            if (!in_array($status, $terminal, true)) {
+                                                foreach (OrderModel::statuses() as $key => $label) {
+                                                    if ($key !== $status && OrderModel::isValidTransition($status, $key, $pm)) {
+                                                        $nextStatuses[$key] = $label;
+                                                    }
+                                                }
+                                            }
                                         ?>
                                         <div class="d-flex flex-column gap-2 align-items-center">
                                             <!-- Status Badge - Fixed Width & Centered -->
+                                            <?php if (empty($nextStatuses)): ?>
                                             <span class="badge bg-<?= OrderModel::statusBadge($status) ?> py-2 d-block" style="width: 210px;">
                                                 <?= OrderModel::statusLabel($status) ?>
                                             </span>
+                                            <?php endif; ?>
 
                                             <!-- Return Status Badge -->
                                             <?php if ($ret): ?>
@@ -121,47 +138,61 @@
                                                         <?= htmlspecialchars($order['cancel_reason']) ?>
                                                     </div>
                                                 <?php endif; ?>
-                                            <?php elseif ($status === OrderModel::STATUS_PENDING): ?>
-                                                <div class="d-flex flex-column gap-2">
-                                                    <form method="POST" action="<?= BASE_URL ?>?action=admin-order-confirm" class="mb-0">
-                                                        <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                                        <button class="btn btn-dark btn-sm fw-bold py-2 d-flex justify-content-center align-items-center" style="width: 210px;">Xác Nhận Đơn Hàng</button>
-                                                    </form>
-                                                </div>
-                                            <?php elseif ($status === OrderModel::STATUS_CONFIRMED): ?>
-                                                <div class="d-flex flex-column gap-2">
-                                                    <form method="POST" action="<?= BASE_URL ?>?action=admin-order-preparing" class="mb-0">
-                                                        <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                                        <button class="btn btn-info btn-sm fw-bold py-2 text-white d-flex justify-content-center align-items-center" style="width: 210px;">Đang Chuẩn Bị</button>
-                                                    </form>
-                                                </div>
-                                            <?php elseif ($status === OrderModel::STATUS_PREPARING): ?>
-                                                <div class="d-flex flex-column gap-2">
-                                                    <form method="POST" action="<?= BASE_URL ?>?action=admin-order-handed-to-shipper" class="mb-0">
-                                                        <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                                        <button class="btn btn-warning btn-sm fw-bold py-2 text-dark d-flex justify-content-center align-items-center" style="width: 210px;">Giao Vận Chuyển</button>
-                                                    </form>
-                                                </div>
-                                            <?php elseif ($status === OrderModel::STATUS_HANDED_TO_SHIPPER): ?>
-                                                <form method="POST" action="<?= BASE_URL ?>?action=admin-order-shipping" class="mb-0">
-                                                    <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                                    <button class="btn btn-info btn-sm fw-bold py-2 text-white d-flex justify-content-center align-items-center" style="width: 210px;">Đang Vận Chuyển</button>
-                                                </form>
-                                            <?php elseif ($status === OrderModel::STATUS_SHIPPING): ?>
-                                                <form method="POST" action="<?= BASE_URL ?>?action=admin-order-delivered" class="mb-0">
-                                                    <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                                    <button class="btn btn-success btn-sm fw-bold py-2 d-flex justify-content-center align-items-center" style="width: 210px;">Đã Giao Hàng</button>
-                                                </form>
-                                            <?php elseif ($status === OrderModel::STATUS_TO_SHIP): ?>
-                                                <form method="POST" action="<?= BASE_URL ?>?action=admin-order-delivered" class="mb-0">
-                                                    <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                                                    <button class="btn btn-outline-primary btn-sm fw-bold py-2 d-flex justify-content-center align-items-center" style="width: 210px;">Xác Nhận Đã Giao</button>
-                                                </form>
                                             <?php elseif ($status === OrderModel::STATUS_CANCELLED && !empty($order['cancel_reason'])): ?>
                                                 <div class="mt-2 small text-danger">
                                                     <i class="bi bi-x-octagon"></i>
                                                     Lý do hủy: <?= htmlspecialchars($order['cancel_reason']) ?>
                                                 </div>
+                                            <?php else: ?>
+                                                <?php
+                                                    // Chỉ hiển thị điều khiển khi đơn chưa ở trạng thái cuối
+                                                    // không cho thao tác với delivered/completed/cancelled/returned
+                                                    $terminal = [
+                                                        OrderModel::STATUS_DELIVERED,
+                                                        OrderModel::STATUS_COMPLETED,
+                                                        OrderModel::STATUS_CANCELLED,
+                                                        OrderModel::STATUS_RETURNED,
+                                                    ];
+                                                    $nextStatuses = [];
+                                                    if (!in_array($status, $terminal, true)) {
+                                                        $allStatuses = OrderModel::statuses();
+                                                        foreach ($allStatuses as $key => $label) {
+                                                            if ($key !== $status && OrderModel::isValidTransition($status, $key, $pm)) {
+                                                                $nextStatuses[$key] = $label;
+                                                            }
+                                                        }
+                                                    }
+                                                ?>
+                                                <?php if (!empty($nextStatuses)): ?>
+                                                    <form method="POST" action="<?= BASE_URL ?>?action=admin-order-update" class="mb-0 status-dropdown-form">
+                                                        <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
+                                                        <input type="hidden" name="status" value="">
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-sm btn-<?= OrderModel::statusBadge($status) ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:210px;font-size:0.8rem;">
+                                                                <?= OrderModel::statusLabel($status) ?>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+                                                                <?php foreach ($nextStatuses as $key => $label): ?>
+                                                                    <li><a class="dropdown-item status-option" href="#" data-value="<?= $key ?>"><?= $label ?></a></li>
+                                                                <?php endforeach; ?>
+                                                            </ul>
+                                                        </div>
+                                                    </form>
+                                                    <script>
+                                                        document.querySelectorAll('.status-dropdown-form').forEach(function(form) {
+                                                            form.querySelectorAll('.status-option').forEach(function(link) {
+                                                                link.addEventListener('click', function(e) {
+                                                                    e.preventDefault();
+                                                                    var val = this.getAttribute('data-value');
+                                                                    if (val) {
+                                                                        form.querySelector('input[name=status]').value = val;
+                                                                        form.submit();
+                                                                    }
+                                                                });
+                                                            });
+                                                        });
+                                                    </script>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
                                     </td>

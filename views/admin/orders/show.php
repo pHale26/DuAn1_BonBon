@@ -97,13 +97,26 @@
     <div class="col-12">
         <div class="card">
             <div class="card-body">
+                <?php
+                    // hiển thị form cho phép thay đổi trạng thái trên trang chi tiết
+                    $currentStatus = $order['status'];
+                    $pm = strtolower($order['payment_method'] ?? 'cod');
+                    $nextStatuses = [];
+                    foreach (OrderModel::statuses() as $key => $label) {
+                        if ($key !== $currentStatus && OrderModel::isValidTransition($currentStatus, $key, $pm)) {
+                            $nextStatuses[$key] = $label;
+                        }
+                    }
+                ?>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold mb-0">Sản phẩm</h5>
                     <div class="text-end">
                         <div class="mb-1">
+                            <?php if (empty($nextStatuses)): ?>
                             <span class="badge bg-<?= OrderModel::statusBadge($order['status']) ?> px-3 py-2">
                                 <?= OrderModel::statusLabel($order['status']) ?>
                             </span>
+                            <?php endif; ?>
                         </div>
                         <div class="small">
                             <strong>Tổng tiền:</strong> <?= number_format($order['total_amount'] ?? 0, 0, ',', '.') ?> đ
@@ -113,6 +126,52 @@
                         </div>
                     </div>
                 </div>
+                <?php
+                    // return to default if finalized
+                    $terminal = [
+                        OrderModel::STATUS_DELIVERED,
+                        OrderModel::STATUS_COMPLETED,
+                        OrderModel::STATUS_CANCELLED,
+                        OrderModel::STATUS_RETURNED,
+                    ];
+                    if (!in_array($order['status'], $terminal, true)):
+                ?>
+                    <?php if (!empty($nextStatuses)): ?>
+                        <form method="POST" action="<?= BASE_URL ?>?action=admin-order-update" class="mb-4 status-dropdown-form">
+                        <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
+                        <input type="hidden" name="status" value="">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-auto">
+                                <label class="form-label small mb-1">Cập nhật trạng thái</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-<?= OrderModel::statusBadge($order['status']) ?> dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:210px;font-size:0.8rem;">
+                                        <?= OrderModel::statusLabel($order['status']) ?>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <?php foreach ($nextStatuses as $key => $label): ?>
+                                            <li><a class="dropdown-item status-option" href="#" data-value="<?= $key ?>"><?= $label ?></a></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <script>
+                        document.querySelectorAll('.status-dropdown-form').forEach(function(form) {
+                            form.querySelectorAll('.status-option').forEach(function(link) {
+                                link.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    var val = this.getAttribute('data-value');
+                                    if (val) {
+                                        form.querySelector('input[name=status]').value = val;
+                                        form.submit();
+                                    }
+                                });
+                            });
+                        });
+                    </script>
+                <?php endif; ?>
+                <?php endif; ?>
                 <div class="table-responsive">
                     <table class="table align-middle">
                         <thead>

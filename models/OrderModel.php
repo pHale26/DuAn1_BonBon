@@ -38,17 +38,17 @@ class OrderModel extends BaseModel
 
     // Map trạng thái -> màu sắc badge Bootstrap (phục vụ view)
     private const STATUS_BADGES = [
-        self::STATUS_UNPAID         => 'warning',
-        self::STATUS_PAID           => 'primary',
+        self::STATUS_UNPAID         => 'warning',          // chờ thanh toán
+        self::STATUS_PAID           => 'primary',          // đã thanh toán online
         self::STATUS_PAYMENT_FAILED => 'danger',
-        self::STATUS_PENDING        => 'secondary',
-        self::STATUS_CONFIRMED      => 'info',
-        self::STATUS_PREPARING      => 'info',
-        self::STATUS_HANDED_TO_SHIPPER => 'warning',
-        self::STATUS_SHIPPING       => 'info',
-        self::STATUS_TO_SHIP        => 'info',
-        self::STATUS_DELIVERED      => 'primary',
-        self::STATUS_COMPLETED      => 'success',
+        self::STATUS_PENDING        => 'secondary',        // chờ shop xác nhận
+        self::STATUS_CONFIRMED      => 'info',             // đã xác nhận (màu nhạt)
+        self::STATUS_PREPARING      => 'primary',          // đang chuẩn bị (màu đậm)
+        self::STATUS_HANDED_TO_SHIPPER => 'warning',        // giao cho shipper
+        self::STATUS_SHIPPING       => 'secondary',        // đang vận chuyển
+        self::STATUS_TO_SHIP        => 'secondary',        // tương thích với trạng thái cũ
+        self::STATUS_DELIVERED      => 'success',          // đã giao hàng
+        self::STATUS_COMPLETED      => 'success',          // hoàn thành
         self::STATUS_CANCELLED      => 'danger',
         self::STATUS_RETURNED       => 'dark',
         self::STATUS_CANCEL_REQUEST => 'warning',

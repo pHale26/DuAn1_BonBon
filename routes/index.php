@@ -86,6 +86,8 @@ match ($action) {
     'admin-statistics'   => (new AdminStatisticsController)->index(),
     'admin-orders'            => (new AdminOrderController)->index(),
     'admin-order-update'      => (new AdminOrderController)->updateStatus(),
+    // alias used by some views
+    'admin-order-update-status' => (new AdminOrderController)->updateStatus(),
     'admin-order-detail'      => (new AdminOrderController)->detail(),
     'admin-order-approve-cancel' => (new AdminOrderController)->approveCancel(),
     'admin-order-confirm'     => (new AdminOrderController)->confirmOrder(),
