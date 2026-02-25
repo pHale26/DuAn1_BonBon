@@ -242,6 +242,9 @@ class AdminOrderController
         $keyword = trim($_GET['keyword'] ?? '');
         $status = trim($_GET['status'] ?? '');
 
+        // Tự động hoàn thành đơn "Đã Giao" quá 3 ngày chưa xác nhận
+        $this->orderModel->autoCompleteDeliveredOrders(3);
+
         // Lấy danh sách đơn hàng với filter
         $orders = $this->orderModel->getAll(
             !empty($keyword) ? $keyword : null,

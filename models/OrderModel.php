@@ -576,6 +576,87 @@ class OrderModel extends BaseModel
         return $updated;
     }
 
+    /**
+     * Tự động chuyển đơn "Đã Giao" (delivered) sang "Hoàn Thành" (completed)
+     * nếu khách hàng không bấm xác nhận sau 3 ngày.
+     * Nên gọi method này khi load danh sách đơn hàng (admin/user).
+     */
+    public function autoCompleteDeliveredOrders(int $days = 3): int
+    {
+        try {
+            // Lấy các đơn delivered quá hạn trước khi update (để gửi notification)
+            $days = (int) $days; // đảm bảo an toàn
+            $stmt = $this->pdo->prepare("
+                SELECT id, order_code, user_id, email, payment_method 
+                FROM orders_new 
+                WHERE status = :delivered 
+                  AND updated_at <= DATE_SUB(NOW(), INTERVAL {$days} DAY)
+            ");
+            $stmt->execute([
+                ':delivered' => self::STATUS_DELIVERED,
+            ]);
+            $expiredOrders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($expiredOrders)) {
+                return 0;
+            }
+
+            // Cập nhật hàng loạt sang COMPLETED
+            $updateStmt = $this->pdo->prepare("
+                UPDATE orders_new 
+                SET status = :completed, updated_at = CURRENT_TIMESTAMP 
+                WHERE status = :delivered 
+                  AND updated_at <= DATE_SUB(NOW(), INTERVAL {$days} DAY)
+            ");
+            $updateStmt->execute([
+                ':completed' => self::STATUS_COMPLETED,
+                ':delivered' => self::STATUS_DELIVERED,
+            ]);
+            $count = $updateStmt->rowCount();
+
+            // Gửi thông báo cho từng khách hàng
+            if ($count > 0) {
+                try {
+                    $notificationModel = new NotificationModel();
+                    foreach ($expiredOrders as $order) {
+                        $targetUserId = (int)($order['user_id'] ?? 0);
+                        if ($targetUserId <= 0 && !empty($order['email'])) {
+                            $userModel = new UserModel();
+                            $found = $userModel->findByEmail($order['email']);
+                            if ($found) {
+                                $targetUserId = (int)($found['user_id'] ?? $found['id'] ?? 0);
+                            }
+                        }
+                        if ($targetUserId > 0) {
+                            $orderCode = $order['order_code'] ?? ('#' . $order['id']);
+                            $notificationModel->create(
+                                $targetUserId,
+                                'order_status',
+                                "Đơn {$orderCode} đã tự động hoàn thành",
+                                "Đơn hàng đã được tự động xác nhận hoàn thành sau {$days} ngày giao hàng.",
+                                BASE_URL . '?action=order-detail&id=' . $order['id'],
+                                [
+                                    'order_id' => $order['id'],
+                                    'order_code' => $order['order_code'] ?? null,
+                                    'status' => self::STATUS_COMPLETED,
+                                    'status_label' => self::statusLabel(self::STATUS_COMPLETED),
+                                    'auto_completed' => true,
+                                ]
+                            );
+                        }
+                    }
+                } catch (Throwable $e) {
+                    error_log('OrderModel::autoCompleteDeliveredOrders notification error: ' . $e->getMessage());
+                }
+            }
+
+            return $count;
+        } catch (Throwable $e) {
+            error_log('OrderModel::autoCompleteDeliveredOrders error: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
     // Người dùng hủy đơn (ghi nhận lý do nếu có)
     public function cancel(int $orderId, ?string $reason = null): bool
     {

@@ -30,6 +30,9 @@ class OrderController
         error_log("OrderController::history - User data: " . json_encode(array_keys($user)));
         error_log("OrderController::history - Status filter: " . ($statusFilter ?? 'all'));
         
+        // Tự động hoàn thành đơn "Đã Giao" quá 3 ngày chưa xác nhận
+        $this->orderModel->autoCompleteDeliveredOrders(3);
+
         $orders = $this->orderModel->getHistory($userId, $userEmail);
         
         // Lọc theo status nếu có

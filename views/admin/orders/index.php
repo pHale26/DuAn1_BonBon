@@ -59,18 +59,19 @@
                 <table class="table align-middle">
                     <thead>
                         <tr>
-                            <th class="text-center">Mã đơn</th>
-                            <th class="text-center">Khách hàng</th>
-                            <th class="text-center">Liên hệ</th>
-                            <th class="text-center">Giá trị</th>
-                            <th class="text-center">Trạng thái / Cập nhật</th>
-                            <th class="text-center">Hành động</th>
+                            <th class="text-center" style="white-space:nowrap">Mã đơn</th>
+                            <th class="text-center" style="white-space:nowrap">Khách hàng</th>
+                            <th class="text-center" style="white-space:nowrap">Liên hệ</th>
+                            <th class="text-center" style="white-space:nowrap">Giá trị</th>
+                            <th class="text-center" style="white-space:nowrap">Trạng thái đơn</th>
+                            <th class="text-center" style="white-space:nowrap">Thanh toán</th>
+                            <th class="text-center" style="white-space:nowrap">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($orders)): ?>
                             <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">Không có đơn hàng nào.</td>
+                                <td colspan="8" class="text-center py-4 text-muted">Không có đơn hàng nào.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($orders as $order): ?>
@@ -101,26 +102,12 @@
                                                 <?= OrderModel::statusLabel($status) ?>
                                             </span>
 
-                                            <!-- Paid / Return Status (Secondary Badges) -->
-                                            <?php 
-                                                $isPaid = in_array($status, [
-                                                    OrderModel::STATUS_PAID,
-                                                    OrderModel::STATUS_PENDING,
-                                                    OrderModel::STATUS_TO_SHIP,
-                                                    OrderModel::STATUS_DELIVERED,
-                                                    OrderModel::STATUS_COMPLETED,
-                                                ], true) && ($order['payment_method'] ?? '') === 'banking';
-                                            ?>
-                                            <?php if ($isPaid || $ret): ?>
+                                            <!-- Return Status Badge -->
+                                            <?php if ($ret): ?>
                                                 <div class="d-flex flex-wrap gap-1 justify-content-center" style="width: 210px;">
-                                                    <?php if ($isPaid): ?>
-                                                        <span class="badge bg-success px-2 py-1">Đã thanh toán</span>
-                                                    <?php endif; ?>
-                                                    <?php if ($ret): ?>
-                                                        <span class="badge bg-warning text-dark px-2 py-1">
-                                                            Trả: <?= htmlspecialchars(ReturnRequestModel::statusLabel($ret['status'])) ?>
-                                                        </span>
-                                                    <?php endif; ?>
+                                                    <span class="badge bg-warning text-dark px-2 py-1">
+                                                        Trả: <?= htmlspecialchars(ReturnRequestModel::statusLabel($ret['status'])) ?>
+                                                    </span>
                                                 </div>
                                             <?php endif; ?>
                                             <?php if ($status === OrderModel::STATUS_CANCEL_REQUEST): ?>
@@ -178,7 +165,28 @@
                                             <?php endif; ?>
                                         </div>
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-center">
+                                        <?php
+                                            $isPaid = 
+                                                // Banking: đã thanh toán online
+                                                (($order['payment_method'] ?? '') === 'banking' && in_array($status, [
+                                                    OrderModel::STATUS_PAID,
+                                                    OrderModel::STATUS_PENDING,
+                                                    OrderModel::STATUS_TO_SHIP,
+                                                    OrderModel::STATUS_DELIVERED,
+                                                    OrderModel::STATUS_COMPLETED,
+                                                ], true))
+                                                ||
+                                                // Đơn hoàn thành = đã thanh toán (kể cả COD)
+                                                $status === OrderModel::STATUS_COMPLETED;
+                                        ?>
+                                        <?php if ($isPaid): ?>
+                                            <span class="badge bg-success px-3 py-2">
+                                                <i class="bi bi-check-circle me-1"></i>Đã thanh toán
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
                                         <a href="<?= BASE_URL ?>?action=admin-order-detail&id=<?= $order['id'] ?>" class="btn btn-sm btn-outline-secondary">Xem</a>
                                     </td>
                                 </tr>
