@@ -12,12 +12,12 @@
 
                 <div class="mb-3">
                     <label class="form-label" for="otp">Mã OTP</label>
-                    <input type="text" class="form-control" id="otp" name="otp" placeholder="Nhập mã 6 chữ số" required>
+                    <input type="text"  class="form-control" id="otp" name="otp" placeholder="Nhập mã 6 chữ số" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label" for="password">Mật khẩu mới</label>
-                    <input type="password" class="form-control" id="password" name="password" placeholder="Tạo mật khẩu mới" required>
+                    <input type="password"  class="form-control" id="password" name="password" placeholder="Tạo mật khẩu mới" required>
                 </div>
 
                 <div class="mb-3">
@@ -28,7 +28,7 @@
                 <button type="submit" class="reset-button">Cập nhật mật khẩu</button>
             </form>
 
-            <a href="<?= BASE_URL ?>?action=show-login" class="back-link">← Quay lại đăng nhập</a>
+            <a href= "<?= BASE_URL ?>?action=show-login" class="back-link">← Quay lại đăng nhập</a>
         </div>
     </div>
 </section>
