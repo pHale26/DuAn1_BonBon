@@ -49,6 +49,9 @@ INSERT INTO `attributes` (`attribute_id`, `attribute_name`) VALUES
 -- Cấu trúc bảng cho bảng `attribute_values`
 --
 
+
+DROP TABLE IF EXISTS `attribute_values`;
+
 CREATE TABLE IF NOT EXISTS `attribute_values` (
   `value_id` int(11) NOT NULL,
   `attribute_id` int(11) NOT NULL,
