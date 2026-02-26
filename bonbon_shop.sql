@@ -146,7 +146,6 @@ INSERT INTO `categories` (`category_id`, `category_name`, `description`, `create
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `coupons`
 --
 
 CREATE TABLE IF NOT EXISTS `coupons` (
@@ -163,7 +162,8 @@ CREATE TABLE IF NOT EXISTS `coupons` (
   `usage_limit` int(11) DEFAULT NULL,
   `used_count` int(11) DEFAULT 0,
   `created_at` datetime DEFAULT NULL,
-  `updated_at` datetime DEFAULT NULL
+  `updated_at` datetime DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1004,12 +1004,6 @@ ALTER TABLE `categories`
 ALTER TABLE `coupons`
   ADD PRIMARY KEY (`coupon_id`),
   ADD UNIQUE KEY `code` (`code`);
-
---
--- Thêm cột deleted_at cho soft delete (thùng rác)
---
-ALTER TABLE `coupons`
-  ADD COLUMN `deleted_at` datetime DEFAULT NULL AFTER `updated_at`;
 
 --
 -- Chỉ mục cho bảng `coupon_usage`
