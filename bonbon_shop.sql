@@ -27,6 +27,9 @@ SET time_zone = "+00:00";
 -- Cấu trúc bảng cho bảng `attributes`
 --
 
+
+DROP TABLE IF EXISTS `attributes`;
+
 CREATE TABLE IF NOT EXISTS `attributes` (
   `attribute_id` int(11) NOT NULL,
   `attribute_name` varchar(100) NOT NULL
