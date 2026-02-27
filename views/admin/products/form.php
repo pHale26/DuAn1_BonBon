@@ -23,9 +23,9 @@ $productId = $isEditing ? (int)$product['id'] : null;
                        value="<?= htmlspecialchars($product['name'] ?? '') ?>" placeholder="Nhập tên sản phẩm">
             </div>
             <div>
-                <label class="form-label" for="category_id">Danh mục</label>
-                <select id="category_id" name="category_id" class="form-select">
-                    <option value="">— Chọn danh mục —</option>
+                <label class="form-label" for="category_id">Danh mục <span class="text-danger">*</span></label>
+                <select id="category_id" name="category_id" class="form-select" required>
+                    <option value="" disabled <?= empty($product['category_id']) ? 'selected' : '' ?>>— Chọn danh mục —</option>
                     <?php foreach ($categories as $category): ?>
                         <option value="<?= $category['category_id'] ?>"
                             <?= ($product['category_id'] ?? null) == $category['category_id'] ? 'selected' : '' ?>>
@@ -37,34 +37,31 @@ $productId = $isEditing ? (int)$product['id'] : null;
         </div>
 
         <div class="mb-4">
-            <label class="form-label" for="description">Mô tả</label>
-            <textarea id="description" name="description" class="form-control" rows="4" 
-                      placeholder="Mô tả chi tiết sản phẩm"><?= htmlspecialchars($product['description'] ?? '') ?></textarea>
+            <label class="form-label" for="description">Mô tả <span class="text-danger">*</span></label>
+            <textarea id="description" name="description" class="form-control" rows="4" required placeholder="Mô tả chi tiết sản phẩm"><?= htmlspecialchars($product['description'] ?? '') ?></textarea>
         </div>
 
         <?php $hasVariants = !empty($variants ?? []); ?>
         <div class="form-grid-3">
             <div>
                 <label class="form-label" for="original_price">Giá gốc (VNĐ) <span class="text-danger">*</span></label>
-                <input type="number" id="original_price" name="original_price" min="0" step="1000" class="form-control" required
-                       value="<?= htmlspecialchars((string)(int)(float)($product['original_price'] ?? $product['price'] ?? 0)) ?>" placeholder="0">
+                <input type="number" id="original_price" name="original_price" min="0" step="1000" class="form-control" required value="<?= htmlspecialchars((string)($product['original_price'] ?? $product['price'] ?? '')) ?>" placeholder="Nhập giá gốc">
                 <small class="text-muted">Giá gốc của sản phẩm</small>
             </div>
             <div>
                 <label class="form-label" for="sale_price">Giá giảm giá (VNĐ)</label>
-                <input type="number" id="sale_price" name="sale_price" min="0" step="1000" class="form-control"
-                       value="<?= htmlspecialchars((string)(int)(float)($product['sale_price'] ?? '')) ?>" placeholder="Để trống nếu không giảm giá">
+                <input type="number" id="sale_price" name="sale_price" min="0" step="1000" class="form-control" value="<?= htmlspecialchars((string)($product['sale_price'] ?? '')) ?>" placeholder="Để trống nếu không giảm giá">
                 <small class="text-muted">Giá bán sau khi giảm (tùy chọn)</small>
             </div>
             <div>
                 <?php if ($hasVariants): ?>
                     <label class="form-label" for="stock">Tồn kho sản phẩm cha</label>
-                    <input type="number" id="stock" name="stock" min="0" class="form-control" value="" readonly>
+                    <input type="number" id="stock" name="stock" min="0" class="form-control" value="<?= htmlspecialchars($product['stock'] ?? 0) ?>" readonly>
                     <small class="text-muted">Sản phẩm có biến thể. Tồn kho được quản lý ở từng biến thể.</small>
                 <?php else: ?>
-                    <label class="form-label" for="stock">Tồn kho <span class="text-danger">*</span></label>
-                    <input type="number" id="stock" name="stock" min="0" class="form-control" required
-                           value="<?= htmlspecialchars($product['stock'] ?? 0) ?>" placeholder="0">
+                    <label class="form-label" for="stock">Tồn kho</label>
+                    <input type="number" id="stock" name="stock" min="0" class="form-control"
+                           value="<?= htmlspecialchars((string)($product['stock'] ?? '')) ?>" placeholder="Nhập số lượng tồn kho">
                 <?php endif; ?>
             </div>
         </div>
@@ -127,7 +124,7 @@ $productId = $isEditing ? (int)$product['id'] : null;
         </script>
 
         <div style="margin-bottom: 1.5rem;">
-            <label class="form-label" for="image">Ảnh đại diện sản phẩm</label>
+            <label class="form-label" for="image">Ảnh đại diện sản phẩm <span class="text-danger">*</span></label>
             <div class="image-upload-wrapper">
                 <?php 
                 // Lấy ảnh hiện tại (ưu tiên 'image', sau đó 'image_url')
@@ -139,7 +136,7 @@ $productId = $isEditing ? (int)$product['id'] : null;
                         <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem;">Ảnh hiện tại</div>
                     </div>
                 <?php endif; ?>
-                <input type="file" id="image" name="image" class="form-control" accept="image/*" 
+                <input type="file" id="image" name="image" class="form-control" accept="image/*" <?= (!$isEditing || empty($currentImage)) ? 'required' : '' ?> 
                        onchange="previewImage(this)" style="padding: 0.5rem;">
                 <div id="imagePreview" style="margin-top: 1rem;"></div>
                 <small style="color: #64748b; display: block; margin-top: 0.5rem;">

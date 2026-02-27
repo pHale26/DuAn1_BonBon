@@ -424,72 +424,77 @@ class AdminProductController
 
     private function buildProductPayload(): ?array
     {
+        $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
+
         $name = trim($_POST['name'] ?? '');
-        $description = trim($_POST['description'] ?? '') ?: null;
-        $originalPrice = $this->toFloat($_POST['original_price'] ?? 0);
-        // Xử lý sale_price: nếu rỗng hoặc 0 thì set null
-        $salePriceInput = trim($_POST['sale_price'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $categoryId = isset($_POST['category_id']) ? (int)$_POST['category_id'] : 0;
+
+        $originalPriceInput = trim((string)($_POST['original_price'] ?? ''));
+        $salePriceInput = trim((string)($_POST['sale_price'] ?? ''));
+        $stockInput = trim((string)($_POST['stock'] ?? ''));
+
+        if (
+            $name === '' ||
+            $description === '' ||
+            $categoryId <= 0 ||
+            $originalPriceInput === ''
+        ) {
+            set_flash('danger', 'Vui long nhap day du tat ca thong tin bat buoc.');
+            return null;
+        }
+
+        $originalPrice = $this->toFloat($originalPriceInput);
         $salePrice = null;
-        if ($salePriceInput !== '' && $salePriceInput !== '0') {
-            $salePriceFloat = $this->toFloat($salePriceInput);
-            if ($salePriceFloat > 0) {
-                $salePrice = $salePriceFloat;
+        if ($salePriceInput !== '') {
+            $salePriceValue = $this->toFloat($salePriceInput);
+            if ($salePriceValue > 0) {
+                $salePrice = $salePriceValue;
             }
         }
-        $stock = (int)($_POST['stock'] ?? 0);
-        $categoryId = isset($_POST['category_id']) ? (int)$_POST['category_id'] : null;
-        $productId = isset($_POST['product_id']) ? (int)$_POST['product_id'] : 0;
-        
-        // Xử lý upload ảnh
+        $stock = $stockInput === '' ? 0 : (int)$stockInput;
+
+        if ($originalPrice <= 0 || $stock < 0) {
+            set_flash('danger', 'Gia goc phai > 0 va ton kho phai >= 0.');
+            return null;
+        }
+
+        if ($salePrice !== null && $salePrice > $originalPrice) {
+            set_flash('danger', 'Gia giam gia khong duoc lon hon gia goc.');
+            return null;
+        }
+
         $imageUrl = null;
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            // Có upload ảnh mới
             $imageUrl = $this->handleImageUpload($_FILES['image']);
             if (!$imageUrl) {
-                set_flash('danger', 'Không thể upload ảnh. Vui lòng thử lại.');
+                set_flash('danger', 'Khong the upload anh. Vui long thu lai.');
                 return null;
             }
         } elseif ($productId > 0) {
-            // Không có upload mới, nhưng đang cập nhật → lấy ảnh cũ từ database
             $existingProduct = $this->productModel->getProductById($productId);
-            if ($existingProduct && !empty($existingProduct['image'])) {
-                $imageUrl = $existingProduct['image'];
+            if ($existingProduct) {
+                $imageUrl = $existingProduct['image'] ?? $existingProduct['image_url'] ?? null;
             }
         }
 
-        // Validation: giá gốc là bắt buộc
-        if ($name === '' || $originalPrice < 0) {
-            set_flash('danger', 'Vui lòng nhập ít nhất tên và giá gốc hợp lệ.');
+        if (!$imageUrl) {
+            set_flash('danger', 'Vui long tai len anh dai dien san pham.');
             return null;
         }
 
-        // Validation: giá giảm giá phải nhỏ hơn giá gốc
-        if ($salePrice !== null && $salePrice >= $originalPrice) {
-            set_flash('danger', 'Giá giảm giá phải nhỏ hơn giá gốc.');
-            return null;
-        }
-
-        // Giá hiển thị: nếu có sale_price thì dùng sale_price, nếu không thì dùng original_price
-        $displayPrice = $salePrice !== null && $salePrice > 0 ? $salePrice : $originalPrice;
-
-        $payload = [
+        return [
             'name' => $name,
             'description' => $description,
-            'price' => $displayPrice, // Giá hiển thị
+            'price' => $salePrice !== null ? $salePrice : $originalPrice,
             'original_price' => $originalPrice,
             'sale_price' => $salePrice,
             'stock' => max(0, $stock),
             'category_id' => $categoryId,
+            'image_url' => $imageUrl,
         ];
-        
-        // Thêm image_url nếu có (ảnh mới hoặc ảnh cũ)
-        if ($imageUrl) {
-            $payload['image_url'] = $imageUrl;
-        }
-        
-        return $payload;
     }
-    
+
     private function handleImageUpload(array $file): ?string
     {
         // Kiểm tra file có hợp lệ không
