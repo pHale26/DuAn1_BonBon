@@ -718,9 +718,10 @@ function loadAvailableCoupons() {
                                 ? `Giảm ${coupon.discount_value}%` 
                                 : `Giảm ${formatCurrency(coupon.discount_value)}`;
                             
-                            const maxDiscount = coupon.max_discount_amount 
-                                ? ` (Tối đa ${formatCurrency(coupon.max_discount_amount)})` 
-                                : '';
+                            const maxDiscount = coupon.discount_type === 'fixed' ? '' : 
+                                (coupon.max_discount_amount 
+                                    ? ` (Tối đa ${formatCurrency(coupon.max_discount_amount)})` 
+                                    : '');
                             
                             const minOrderText = coupon.min_order_amount > 0
                                 ? `Đơn tối thiểu: ${formatCurrency(coupon.min_order_amount)}`
