@@ -593,14 +593,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     <?php if (isset($product['id']) && isset($newProductIds) && in_array((int)$product['id'], $newProductIds, true)) : ?>
                         <span class="product-badge">New</span>
                     <?php endif; ?>
+                        <?php
+                            $productImage = getProductImageUrl((string)($product['image'] ?? $product['image_url'] ?? ''), false);
+                        ?>
                         <div class="product-card-image-wrapper">
-                            <img src="<?= $product['image'] ?>" alt="<?= $product['name'] ?>">
+                            <img src="<?= htmlspecialchars($productImage) ?>" alt="<?= htmlspecialchars($product['name'] ?? '') ?>" onerror="this.src='<?= BASE_URL ?>assets/images/logo.png'; this.onerror=null;">
                             <div class="product-card-overlay">
                                 <a class="product-card-icon" href="<?= BASE_URL ?>?action=product-detail&id=<?= $product['id'] ?? 0 ?>" title="Xem chi tiết">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 <?php if (!isset($_SESSION['user']['role']) || $_SESSION['user']['role'] !== 'admin'): ?>
-                                <div class="product-card-icon" onclick="openProductModal(<?= $product['id'] ?? 0 ?>, '<?= htmlspecialchars($product['name']) ?>', <?= $product['price'] ?>, '<?= $product['image'] ?>', <?= $product['category_id'] ?? 0 ?>)" title="Thêm vào giỏ hàng">
+                                <div class="product-card-icon" onclick="openProductModal(<?= $product['id'] ?? 0 ?>, '<?= htmlspecialchars($product['name'], ENT_QUOTES) ?>', <?= $product['price'] ?>, '<?= htmlspecialchars($productImage, ENT_QUOTES) ?>', <?= $product['category_id'] ?? 0 ?>)" title="Thêm vào giỏ hàng">
                                     <i class="bi bi-bag-plus"></i>
                                 </div>
                                 <?php endif; ?>

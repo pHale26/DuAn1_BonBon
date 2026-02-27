@@ -1,15 +1,32 @@
 <section class="container product-detail-section py-5">
     <div class="row g-5">
         <?php
-            // Fallback ảnh chính: ưu tiên ảnh sản phẩm, nếu trống dùng ảnh biến thể đầu tiên (nếu có)
-            $mainImage = $product['image'] ?? $product['image_url'] ?? '';
-            if (empty($mainImage) && !empty($variants ?? [])) {
+            // Fallback ảnh chính: ưu tiên ảnh sản phẩm hợp lệ, nếu file đã mất thì dùng ảnh biến thể đầu tiên.
+            $defaultImageUrl = BASE_URL . 'assets/images/logo.png';
+            $mainImageCandidates = [];
+
+            if (!empty($product['image'])) {
+                $mainImageCandidates[] = $product['image'];
+            } elseif (!empty($product['image_url'])) {
+                $mainImageCandidates[] = $product['image_url'];
+            }
+
+            if (!empty($variants ?? [])) {
                 foreach ($variants as $v) {
-                    if (!empty($v['image_url'])) { $mainImage = $v['image_url']; break; }
+                    if (!empty($v['image_url'])) {
+                        $mainImageCandidates[] = $v['image_url'];
+                    }
                 }
             }
-            // Sử dụng helper function để xử lý ảnh
-            $mainImageUrl = !empty($mainImage) ? getProductImageUrl($mainImage, false) : (BASE_URL . 'assets/images/logo.png');
+
+            $mainImageUrl = $defaultImageUrl;
+            foreach ($mainImageCandidates as $candidate) {
+                $candidateUrl = getProductImageUrl((string)$candidate, false);
+                if ($candidateUrl !== $defaultImageUrl) {
+                    $mainImageUrl = $candidateUrl;
+                    break;
+                }
+            }
         ?>
         <div class="col-lg-6 product-gallery">
             <div class="product-main-image-wrapper mb-4">

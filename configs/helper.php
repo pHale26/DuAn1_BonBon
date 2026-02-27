@@ -181,39 +181,74 @@ if (!function_exists('getProductImageUrl')) {
      */
     function getProductImageUrl(string $imagePath, bool $isRelativePath = true): string
     {
+        $defaultImage = BASE_URL . 'assets/images/logo.png';
+
         // Nếu rỗng, trả về ảnh mặc định
         if (empty($imagePath)) {
-            return BASE_URL . 'assets/images/logo.png';
+            return $defaultImage;
         }
+
+        $finalUrl = '';
 
         // Nếu đã là URL đầy đủ (bắt đầu bằng http:// hoặc https://)
         if (preg_match('/^https?:\/\//i', $imagePath)) {
-            return $imagePath;
+            $finalUrl = $imagePath;
         }
 
-        // Nếu isRelativePath = false, coi như đường dẫn đã đầy đủ từ root
-        if (!$isRelativePath) {
-            // Nếu đã bắt đầu bằng / hoặc BASE_URL, trả về như cũ
-            if (strpos($imagePath, '/') === 0) {
-                // Đường dẫn tuyệt đối từ root
-                return BASE_URL . ltrim($imagePath, '/');
+        if ($finalUrl === '') {
+            // Nếu isRelativePath = false, coi như đường dẫn đã đầy đủ từ root
+            if (!$isRelativePath) {
+                // Nếu đã bắt đầu bằng / hoặc BASE_URL, trả về như cũ
+                if (strpos($imagePath, '/') === 0) {
+                    // Đường dẫn tuyệt đối từ root
+                    $finalUrl = BASE_URL . ltrim($imagePath, '/');
+                } elseif (strpos($imagePath, BASE_URL) === 0 || strpos($imagePath, 'assets/') === 0) {
+                    // Nếu đã chứa BASE_URL hoặc assets, trả về như cũ
+                    $finalUrl = strpos($imagePath, BASE_URL) === 0 ? $imagePath : BASE_URL . $imagePath;
+                } else {
+                    // Mặc định thêm BASE_URL
+                    $finalUrl = BASE_URL . ltrim($imagePath, '/');
+                }
+            } else {
+                // Nếu isRelativePath = true, coi như đường dẫn trong uploads
+                // Loại bỏ BASE_ASSETS_UPLOADS nếu đã có
+                $imagePath = str_replace(BASE_ASSETS_UPLOADS, '', $imagePath);
+                $imagePath = str_replace('assets/uploads/', '', $imagePath);
+                $imagePath = ltrim($imagePath, '/');
+
+                // Thêm BASE_ASSETS_UPLOADS
+                $finalUrl = BASE_ASSETS_UPLOADS . $imagePath;
             }
-            // Nếu đã chứa BASE_URL hoặc assets, trả về như cũ
-            if (strpos($imagePath, BASE_URL) === 0 || strpos($imagePath, 'assets/') === 0) {
-                return strpos($imagePath, BASE_URL) === 0 ? $imagePath : BASE_URL . $imagePath;
-            }
-            // Mặc định thêm BASE_URL
-            return BASE_URL . ltrim($imagePath, '/');
         }
 
-        // Nếu isRelativePath = true, coi như đường dẫn trong uploads
-        // Loại bỏ BASE_ASSETS_UPLOADS nếu đã có
-        $imagePath = str_replace(BASE_ASSETS_UPLOADS, '', $imagePath);
-        $imagePath = str_replace('assets/uploads/', '', $imagePath);
-        $imagePath = ltrim($imagePath, '/');
+        // Nếu là ảnh local của chính dự án nhưng file thật đã mất thì fallback ảnh mặc định.
+        // Tránh tình trạng URL ảnh còn trong DB nhưng file đã bị xóa/mất sau khi reload trang.
+        $parts = parse_url($finalUrl);
+        $path = (string)($parts['path'] ?? '');
+        $host = strtolower((string)($parts['host'] ?? ''));
+        $baseHost = strtolower((string)(parse_url(BASE_URL, PHP_URL_HOST) ?? ''));
+        $basePathRaw = (string)(parse_url(BASE_URL, PHP_URL_PATH) ?? '/');
+        $basePathTrimmed = trim($basePathRaw, '/');
+        $basePath = $basePathTrimmed === '' ? '/' : ('/' . $basePathTrimmed . '/');
 
-        // Thêm BASE_ASSETS_UPLOADS
-        return BASE_ASSETS_UPLOADS . $imagePath;
+        if ($path !== '' && ($host === '' || $host === $baseHost)) {
+            $relativePath = '';
+
+            if (strpos($path, $basePath) === 0) {
+                $relativePath = ltrim(substr($path, strlen($basePath)), '/');
+            } elseif (preg_match('#^/?assets/#', $path)) {
+                $relativePath = ltrim($path, '/');
+            }
+
+            if ($relativePath !== '') {
+                $localFile = PATH_ROOT . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+                if (!is_file($localFile)) {
+                    return $defaultImage;
+                }
+            }
+        }
+
+        return $finalUrl;
     }
 }
 
