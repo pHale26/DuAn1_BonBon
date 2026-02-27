@@ -14,9 +14,9 @@
     <div class="row g-4">
         <div class="col-md-4 text-center">
             <?php if (!empty($product['image'])): ?>
-                <img src="<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" class="img-fluid rounded border">
+                <img src="<?= htmlspecialchars(getProductImageUrl((string)$product['image'], false)) ?>" alt="<?= htmlspecialchars($product['name']) ?>" class="img-fluid rounded border" onerror="this.src='<?= BASE_URL ?>assets/images/logo.png'; this.onerror=null;">
             <?php elseif (!empty($product['image_url'])): ?>
-                <img src="<?= htmlspecialchars($product['image_url']) ?>" alt="<?= htmlspecialchars($product['product_name'] ?? '') ?>" class="img-fluid rounded border">
+                <img src="<?= htmlspecialchars(getProductImageUrl((string)$product['image_url'], false)) ?>" alt="<?= htmlspecialchars($product['product_name'] ?? '') ?>" class="img-fluid rounded border" onerror="this.src='<?= BASE_URL ?>assets/images/logo.png'; this.onerror=null;">
             <?php else: ?>
                 <div class="placeholder-200 d-flex align-items-center justify-content-center border rounded">
                     <i class="bi bi-image fs-1 text-muted"></i>
