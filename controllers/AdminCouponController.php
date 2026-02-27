@@ -178,9 +178,9 @@ class AdminCouponController
         // Đảm bảo KHÔNG có id trong data
         unset($data['id'], $data['coupon_id'], $data['couponId']);
         // Xóa các trường không tồn tại trong database
-        unset($data['description'], $data['per_user_limit'], $data['apply_scope'], 
+        unset($data['description'], $data['apply_scope'], 
               $data['apply_product_ids'], $data['apply_category_ids'], $data['require_login'],
-              $data['new_customer_only'], $data['exclude_sale_items'], $data['exclude_other_coupons'],
+              $data['exclude_sale_items'], $data['exclude_other_coupons'],
               $data['customer_group'], $data['return_on_refund']);
         
         try {
@@ -336,9 +336,9 @@ class AdminCouponController
             // vào bảng orders tại thời điểm đặt hàng (coupon_code, coupon_name, discount_amount).
             // Các đơn hàng đã đặt sẽ luôn hiển thị thông tin mã giảm giá tại thời điểm đặt hàng.
             // Xóa các trường không tồn tại trong database
-            unset($data['description'], $data['per_user_limit'], $data['apply_scope'], 
+            unset($data['description'], $data['apply_scope'], 
                   $data['apply_product_ids'], $data['apply_category_ids'], $data['require_login'],
-                  $data['new_customer_only'], $data['exclude_sale_items'], $data['exclude_other_coupons'],
+                  $data['exclude_sale_items'], $data['exclude_other_coupons'],
                   $data['customer_group'], $data['return_on_refund']);
             $this->couponModel->update($couponId, $data);
             set_flash('success', 'Cập nhật mã giảm giá thành công.');

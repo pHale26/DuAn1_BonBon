@@ -157,7 +157,13 @@
                         </td>
                         <td><?= number_format($coupon['min_order_amount'], 0, ',', '.') ?> đ</td>
                         <td>
-                            <?= $coupon['max_discount_amount'] ? number_format($coupon['max_discount_amount'], 0, ',', '.') . ' đ' : 'Không giới hạn' ?>
+                            <?php 
+                            if ($coupon['discount_type'] === 'fixed') {
+                                echo 'Không áp dụng';
+                            } else {
+                                echo $coupon['max_discount_amount'] ? number_format($coupon['max_discount_amount'], 0, ',', '.') . ' đ' : 'Không giới hạn';
+                            }
+                            ?>
                         </td>
                         <td>
                             <small>
@@ -172,7 +178,17 @@
                             </small>
                         </td>
                         <td>
-                            <?= $coupon['used_count'] ?> / <?= $coupon['usage_limit'] ?? '∞' ?>
+                            <?php 
+                                $limitDisplay = isset($coupon['usage_limit']) && $coupon['usage_limit'] !== null 
+                                    ? (int)$coupon['usage_limit'] 
+                                    : '∞';
+                                if (!empty($coupon['new_customer_only'])) {
+                                    $limitDisplay = isset($coupon['per_user_limit']) && $coupon['per_user_limit'] !== null 
+                                        ? (int)$coupon['per_user_limit'] 
+                                        : 1;
+                                }
+                            ?>
+                            <?= (int)$coupon['used_count'] ?> / <?= is_numeric($limitDisplay) ? $limitDisplay : $limitDisplay ?>
                         </td>
                         <td>
                             <?php
@@ -505,6 +521,26 @@ function handleDiscountTypeChange() {
     }
 }
 
+// Khóa và thiết lập giới hạn mỗi khách khi chọn "Chỉ khách mới"
+function syncNewCustomerLock() {
+    const newCustomerOnly = document.getElementById('newCustomerOnly');
+    const perUserLimit = document.getElementById('perUserLimit');
+    const returnOnRefund = document.getElementById('returnOnRefund');
+    if (!newCustomerOnly || !perUserLimit || !returnOnRefund) return;
+    if (newCustomerOnly.checked) {
+        perUserLimit.value = 1;
+        perUserLimit.readOnly = true;
+        perUserLimit.title = 'Tự động set 1 lượt cho khách mới';
+        returnOnRefund.checked = true;
+    } else {
+        perUserLimit.readOnly = false;
+        perUserLimit.title = '';
+        if (perUserLimit.value === '1') {
+            perUserLimit.value = '';
+        }
+    }
+}
+
 // Validate ngày kết thúc > ngày bắt đầu
 function validateDates() {
     const startDateInput = document.getElementById('startDate');
@@ -563,6 +599,14 @@ function validateDates() {
                     return false;
                 }
             });
+        }
+        
+        // Đồng bộ giới hạn mỗi khách khi tick "Chỉ khách mới"
+        const newCustomerOnly = document.getElementById('newCustomerOnly');
+        if (newCustomerOnly) {
+            newCustomerOnly.addEventListener('change', syncNewCustomerLock);
+            // Chạy lần đầu để set giá trị ban đầu khi mở modal
+            syncNewCustomerLock();
         }
         
         // Validate ngày khi thay đổi
