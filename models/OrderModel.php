@@ -904,13 +904,30 @@ class OrderModel extends BaseModel
         }
     }
 
-    // Lấy tổng số đơn hàng
+    /**
+     * Tổng số đơn hàng trong hệ thống.
+     *
+     * - Được dùng ở dashboard admin đơn giản (`AdminDashboardController`)
+     *   để hiển thị ô thống kê "Tổng đơn hàng".
+     */
     public function getTotalCount(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) as cnt FROM orders_new");
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int)($row['cnt'] ?? 0);
     }
+
+    /**
+     * Thống kê tổng quan trong một khoảng thời gian.
+     *
+     * - Trả về:
+     *   + orders  : tổng số đơn (mọi trạng thái) theo `created_at`
+     *   + revenue : tổng doanh thu (chỉ tính đơn đã giao `delivered`)
+     * - Được dùng ở `AdminStatisticsController` để hiển thị:
+     *   + Card "Tổng Doanh Thu"
+     *   + Card / bảng "Tổng Đơn Hàng"
+     *   + Là cơ sở tính "Lợi nhuận ròng (40%)".
+     */
     public function getStatsByRange(string $fromDate, string $toDate): array
     {
         $stmt = $this->pdo->prepare("SELECT COUNT(*) AS orders FROM orders_new WHERE DATE(created_at) BETWEEN :from_date AND :to_date");
@@ -926,6 +943,15 @@ class OrderModel extends BaseModel
             'revenue' => $revenue,
         ];
     }
+
+    /**
+     * Đếm số đơn theo từng trạng thái trong một khoảng thời gian.
+     *
+     * - Dùng để build các KPI:
+     *   + "Đơn Thành Công" (delivered + completed)
+     *   + "Đơn Hủy", "Đơn đang giao", ...
+     * - Và cho bảng "Thống kê đơn hàng" trong view thống kê admin.
+     */
     public function getStatusCounts(string $fromDate, string $toDate): array
     {
         $result = [];
@@ -943,6 +969,12 @@ class OrderModel extends BaseModel
         }
         return $result;
     }
+
+    /**
+     * Tổng số sản phẩm đã bán trong khoảng thời gian (chỉ tính đơn delivered).
+     *
+     * - Dùng cho card KPI "Sản Phẩm Bán Ra" trên trang thống kê.
+     */
     public function getTotalProductsSold(string $fromDate, string $toDate): int
     {
         $sql = "SELECT COALESCE(SUM(oi.quantity),0) AS qty FROM order_items oi JOIN orders_new o ON o.id = oi.order_id WHERE o.status = :status AND DATE(o.created_at) BETWEEN :from_date AND :to_date";
@@ -951,6 +983,13 @@ class OrderModel extends BaseModel
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int)($row['qty'] ?? 0);
     }
+
+    /**
+     * Top khách hàng chi tiêu nhiều nhất trong khoảng thời gian.
+     *
+     * - Gom nhóm theo user hoặc email khách lẻ.
+     * - Dùng cho bảng "Top 5 Khách Hàng Chi Tiêu Nhiều" trên trang thống kê.
+     */
     public function getTopCustomers(string $fromDate, string $toDate, int $limit = 5): array
     {
         $sql = "SELECT COALESCE(u.full_name, o.fullname, o.email) AS fullname, COALESCE(o.user_id, o.email) AS grp, COUNT(*) AS orders, COALESCE(SUM(o.total_amount),0) AS total_spent FROM orders_new o LEFT JOIN users u ON u.user_id = o.user_id WHERE o.status = :status AND DATE(o.created_at) BETWEEN :from_date AND :to_date GROUP BY grp, fullname ORDER BY total_spent DESC LIMIT :limit";
@@ -962,6 +1001,12 @@ class OrderModel extends BaseModel
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Doanh thu và số đơn theo phương thức thanh toán trong khoảng thời gian.
+     *
+     * - Dùng cho bảng "Doanh Thu Theo Phương Thức" ở view thống kê.
+     */
     public function getRevenueByPaymentMethod(string $fromDate, string $toDate): array
     {
         $sql = "SELECT payment_method, COUNT(*) AS order_count, COALESCE(SUM(total_amount),0) AS revenue FROM orders_new WHERE status = :status AND DATE(created_at) BETWEEN :from_date AND :to_date GROUP BY payment_method ORDER BY revenue DESC";
@@ -969,6 +1014,12 @@ class OrderModel extends BaseModel
         $stmt->execute([':status' => self::STATUS_DELIVERED, ':from_date' => $fromDate, ':to_date' => $toDate]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Số đơn hàng bị trả / hoàn tiền trong khoảng thời gian.
+     *
+     * - Dùng cho card KPI "Đơn Hoàn Tiền" và bảng thống kê đơn hàng.
+     */
     public function getReturnedOrdersCount(string $fromDate, string $toDate): int
     {
         $stmt = $this->pdo->prepare("SELECT COUNT(*) AS cnt FROM orders_new WHERE status = :status AND DATE(created_at) BETWEEN :from_date AND :to_date");
@@ -976,6 +1027,13 @@ class OrderModel extends BaseModel
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return (int)($row['cnt'] ?? 0);
     }
+
+    /**
+     * Doanh thu theo từng ngày trong khoảng thời gian.
+     *
+     * - Chỉ tính đơn đã giao (`delivered`).
+     * - Dùng cho biểu đồ đường "Doanh Thu Theo Ngày" (revenueChart) trong view thống kê.
+     */
     public function getDailyRevenue(string $fromDate, string $toDate): array
     {
         $sql = "SELECT DATE(created_at) AS d, COALESCE(SUM(total_amount),0) AS revenue FROM orders_new WHERE status = :status AND DATE(created_at) BETWEEN :from_date AND :to_date GROUP BY DATE(created_at) ORDER BY DATE(created_at) ASC";
@@ -983,6 +1041,12 @@ class OrderModel extends BaseModel
         $stmt->execute([':status' => self::STATUS_DELIVERED, ':from_date' => $fromDate, ':to_date' => $toDate]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Số đơn theo từng ngày trong khoảng thời gian (mọi trạng thái).
+     *
+     * - Dùng cho biểu đồ cột "Đơn Hàng Theo Ngày" (ordersChart).
+     */
     public function getDailyOrders(string $fromDate, string $toDate): array
     {
         $sql = "SELECT DATE(created_at) AS d, COUNT(*) AS orders FROM orders_new WHERE DATE(created_at) BETWEEN :from_date AND :to_date GROUP BY DATE(created_at) ORDER BY DATE(created_at) ASC";
@@ -990,6 +1054,13 @@ class OrderModel extends BaseModel
         $stmt->execute([':from_date' => $fromDate, ':to_date' => $toDate]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Số đơn theo phương thức thanh toán trong khoảng thời gian.
+     *
+     * - Chỉ tính đơn delivered.
+     * - Dùng cho biểu đồ tròn "Tỉ Lệ Thanh Toán" (paymentChart).
+     */
     public function getPaymentBreakdown(string $fromDate, string $toDate): array
     {
         $sql = "SELECT payment_method, COUNT(*) AS orders FROM orders_new WHERE status = :status AND DATE(created_at) BETWEEN :from_date AND :to_date GROUP BY payment_method ORDER BY orders DESC";
@@ -997,6 +1068,12 @@ class OrderModel extends BaseModel
         $stmt->execute([':status' => self::STATUS_DELIVERED, ':from_date' => $fromDate, ':to_date' => $toDate]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Số đơn hoàn tiền và số đơn hủy theo từng ngày.
+     *
+     * - Dùng cho biểu đồ đường "Hoàn Tiền & Đơn Hủy Theo Ngày" (returnCancelChart).
+     */
     public function getReturnCancelChart(string $fromDate, string $toDate): array
     {
         $sql = "SELECT DATE(created_at) AS d, SUM(CASE WHEN status = :returned THEN 1 ELSE 0 END) AS returned, SUM(CASE WHEN status = :cancelled THEN 1 ELSE 0 END) AS cancelled FROM orders_new WHERE DATE(created_at) BETWEEN :from_date AND :to_date GROUP BY DATE(created_at) ORDER BY DATE(created_at) ASC";
@@ -1004,6 +1081,14 @@ class OrderModel extends BaseModel
         $stmt->execute([':returned' => self::STATUS_RETURNED, ':cancelled' => self::STATUS_CANCELLED, ':from_date' => $fromDate, ':to_date' => $toDate]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Các chỉ số bổ sung của đơn hàng trong khoảng thời gian.
+     *
+     * - Hiện tại chỉ trả về:
+     *   + aov (Average Order Value) = doanh thu delivered / số đơn delivered.
+     * - Dùng cho dòng "Giá trị đơn TB (AOV)" trong bảng thống kê đơn hàng.
+     */
     public function getOrderMetrics(string $fromDate, string $toDate): array
     {
         $stmt1 = $this->pdo->prepare("SELECT COALESCE(SUM(total_amount),0) AS revenue FROM orders_new WHERE status = :status AND DATE(created_at) BETWEEN :from_date AND :to_date");
@@ -1017,6 +1102,13 @@ class OrderModel extends BaseModel
         $aov = $deliveredCount > 0 ? ($revenue / $deliveredCount) : 0.0;
         return ['aov' => $aov];
     }
+
+    /**
+     * Tỷ lệ khách quay lại (returning customers) trong khoảng thời gian.
+     *
+     * - Tính trên các đơn có trạng thái "hợp lệ" (không tính unpaid/cancelled/payment_failed).
+     * - Dùng cho dòng "Tỷ lệ quay lại" trong bảng thống kê khách hàng.
+     */
     public function getReturningCustomerRate(string $fromDate, string $toDate): float
     {
         $validStatuses = [
@@ -1049,6 +1141,13 @@ class OrderModel extends BaseModel
         $returningCustomers = (int)($rowReturning['returning_customers'] ?? 0);
         return ($returningCustomers / $totalCustomers) * 100.0;
     }
+
+    /**
+     * Doanh thu theo từng tháng (mặc định 12 tháng gần nhất).
+     *
+     * - Chỉ tính đơn delivered.
+     * - Dùng để vẽ biểu đồ xu hướng doanh thu theo tháng trên dashboard/thống kê.
+     */
     public function getMonthlyRevenue(int $months = 12): array
     {
         $months = max(1, $months);

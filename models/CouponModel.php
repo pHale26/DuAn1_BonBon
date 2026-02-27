@@ -700,7 +700,18 @@ class CouponModel extends BaseModel
         return $coupons;
     }
 
-    // Thống kê mã giảm giá
+    /**
+     * Thống kê tổng quan về mã giảm giá trong một khoảng thời gian.
+     *
+     * - Nếu có bảng `coupon_usage` sẽ thống kê theo bảng này,
+     *   nếu không sẽ fallback sang bảng `orders_new`.
+     * - Trả về:
+     *   + usage_count   : tổng số lượt dùng mã trong khoảng thời gian.
+     *   + total_discount: tổng số tiền đã giảm cho khách.
+     *   + expired_count : số mã đã hết hạn (tính tại thời điểm hiện tại).
+     * - Được dùng ở `AdminStatisticsController` để hiển thị box
+     *   "Thống Kê Mã Giảm Giá" trong trang thống kê admin.
+     */
     public function getCouponStats(string $fromDate, string $toDate): array
     {
         try {
@@ -754,7 +765,12 @@ class CouponModel extends BaseModel
         }
     }
 
-    // Lấy top mã giảm giá được sử dụng nhiều nhất
+    /**
+     * Lấy danh sách top mã giảm giá được sử dụng nhiều nhất.
+     *
+     * - Ưu tiên đọc từ bảng `coupon_usage`, nếu không có thì lấy trực tiếp từ `orders_new`.
+     * - Dùng cho bảng "Top 5 Mã Được Dùng Nhiều" trong phần thống kê mã giảm giá.
+     */
     public function getTopUsedCoupons(string $fromDate, string $toDate, int $limit = 5): array
     {
         try {

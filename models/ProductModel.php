@@ -1130,7 +1130,12 @@ class ProductModel extends BaseModel
     }
 
     /**
-     * Top sản phẩm bán chạy trong khoảng ngày (theo số lượng)
+     * Top sản phẩm bán chạy trong khoảng ngày (theo số lượng).
+     *
+     * - Chỉ tính các đơn hàng đã giao thành công (`orders_new.status = 'delivered'`).
+     * - Được dùng ở `AdminStatisticsController` để hiển thị:
+     *   + Bảng "Top 5 Sản Phẩm Bán Chạy" và biểu đồ thanh ngang `topProductChart`
+     *     trên trang thống kê admin.
      */
     public function getTopSelling(string $fromDate, string $toDate, int $limit = 5): array
     {
@@ -1158,7 +1163,10 @@ class ProductModel extends BaseModel
     }
 
     /**
-     * Top sản phẩm bán chậm nhất (ít đơn giao thành công)
+     * Top sản phẩm bán chậm nhất (ít đơn giao thành công).
+     *
+     * - Cũng chỉ tính đơn `delivered`.
+     * - Được dùng cho bảng "Top 5 Sản Phẩm Bán Chậm" trong trang thống kê.
      */
     public function getSlowSelling(string $fromDate, string $toDate, int $limit = 5): array
     {
@@ -1415,7 +1423,14 @@ class ProductModel extends BaseModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // Lấy số lượng sản phẩm theo tháng (12 tháng gần nhất)
+    /**
+     * Số lượng sản phẩm theo tháng (12 tháng gần nhất, dạng ước lượng).
+     *
+     * - Dựa trên tổng số sản phẩm hiện tại, chia đều cho từng tháng
+     *   (vì không có cột ngày tạo sản phẩm chính xác cho thống kê theo tháng).
+     * - Được dùng ở `AdminStatisticsController` để hiển thị trend
+     *   "Số lượng sản phẩm theo tháng" trên dashboard/thống kê.
+     */
     public function getMonthlyProducts(int $months = 12): array
     {
         $products = [];
@@ -1437,7 +1452,11 @@ class ProductModel extends BaseModel
         ];
     }
 
-    // Lấy sản phẩm sắp hết hàng
+    /**
+     * Danh sách sản phẩm sắp hết hàng (tồn kho nhỏ hơn hoặc bằng ngưỡng).
+     *
+     * - Được dùng cho box "Sản Phẩm Sắp Hết Hàng" trong trang thống kê admin.
+     */
     public function getLowStockProducts(int $threshold = 10, int $limit = 10): array
     {
         try {
@@ -1469,7 +1488,12 @@ class ProductModel extends BaseModel
         }
     }
 
-    // Lấy số lượng sản phẩm đã bán theo danh mục
+    /**
+     * Số lượng sản phẩm đã bán và doanh thu theo từng danh mục.
+     *
+     * - Chỉ tính các đơn `delivered`.
+     * - Được dùng cho bảng "Số Lượng Sản Phẩm Bán Theo Danh Mục" trong thống kê.
+     */
     public function getSoldByCategory(string $fromDate, string $toDate): array
     {
         try {
@@ -1494,7 +1518,12 @@ class ProductModel extends BaseModel
         }
     }
 
-    // Lấy lợi nhuận ước tính theo sản phẩm (giả sử cost = 60% price)
+    /**
+     * Lợi nhuận ước tính theo sản phẩm (giả sử chi phí = 60%, lợi nhuận ~40%).
+     *
+     * - Tính theo số lượng bán * đơn giá * 0.4.
+     * - Dùng để phân tích sản phẩm mang lại lợi nhuận cao trên trang thống kê.
+     */
     public function getProductProfitEstimate(string $fromDate, string $toDate, int $limit = 10): array
     {
         try {
