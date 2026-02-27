@@ -248,7 +248,11 @@ class UserModel extends BaseModel
         }
     }
 
-    // Lấy tổng số người dùng
+    /**
+     * Tổng số người dùng trong hệ thống.
+     *
+     * - Được dùng ở `AdminDashboardController` để hiển thị KPI "Tổng người dùng".
+     */
     public function getTotalCount(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) AS total FROM {$this->table}");
@@ -256,7 +260,11 @@ class UserModel extends BaseModel
         return (int)($result['total'] ?? 0);
     }
 
-    // Lấy số lượng admin
+    /**
+     * Số lượng tài khoản có vai trò admin.
+     *
+     * - Dùng cho KPI "Quản trị viên" trên trang dashboard admin đơn giản.
+     */
     public function getAdminCount(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) AS total FROM {$this->table} WHERE role = 'admin'");
@@ -264,7 +272,13 @@ class UserModel extends BaseModel
         return (int)($result['total'] ?? 0);
     }
 
-    // Lấy số lượng khách hàng
+    /**
+     * Số lượng tài khoản có vai trò customer.
+     *
+     * - Dùng cho:
+     *   + KPI "Khách hàng" (dashboard đơn giản).
+     *   + Bảng "Thống Kê Khách Hàng" trong trang thống kê chi tiết.
+     */
     public function getCustomerCount(): int
     {
         $stmt = $this->pdo->query("SELECT COUNT(*) AS total FROM {$this->table} WHERE role = 'customer'");
@@ -309,7 +323,13 @@ class UserModel extends BaseModel
         ]);
     }
 
-    // Lấy số khách hàng mới theo khoảng thời gian
+    /**
+     * Số khách hàng mới (role = 'customer') trong một khoảng thời gian.
+     *
+     * - Được dùng ở `AdminStatisticsController` cho:
+     *   + Card KPI "Người Dùng Mới".
+     *   + Dòng "Khách mới (kỳ này)" trong bảng "Thống Kê Khách Hàng".
+     */
     public function getNewCustomersCount(string $fromDate, string $toDate): int
     {
         try {
@@ -327,7 +347,13 @@ class UserModel extends BaseModel
         }
     }
 
-    // Phân loại khách hàng (mới / VIP / thân thiết)
+    /**
+     * Phân loại khách hàng theo rank (customer / vip / loyal).
+     *
+     * - Sử dụng cột `rank` trong bảng `users`, mặc định là 'customer'.
+     * - Được dùng trên trang thống kê để hiển thị số lượng:
+     *   + Khách thường, Khách VIP, Khách thân thiết.
+     */
     public function getCustomerSegmentation(): array
     {
         try {
