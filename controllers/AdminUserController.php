@@ -17,10 +17,10 @@ class AdminUserController
         $toDate = $_GET['to_date'] ?? null;
         $lockStatus = $_GET['lock_status'] ?? null;
 
-        $users = $this->userModel->getAll(
+         $users = $this->userModel->getAll(
             null,
             null,
-            null,
+             null,
             $fromDate ?: null,
             $toDate ?: null,
             $lockStatus ?: null
