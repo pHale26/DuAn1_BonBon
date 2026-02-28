@@ -10,6 +10,7 @@ class CouponModel extends BaseModel
         parent::__construct();
         $this->table = 'coupons';
         $this->ensureDeletedAtColumn();
+        $this->ensureAdvancedColumns();
     }
 
     private function ensureDeletedAtColumn(): void
@@ -39,6 +40,29 @@ class CouponModel extends BaseModel
             }
         }
         return $this->hasDeletedAtColumn;
+    }
+    
+    /**
+     * Đảm bảo các cột nâng cao phục vụ nghiệp vụ coupon tồn tại
+     * - new_customer_only: chỉ khách mới
+     * - per_user_limit: giới hạn mỗi khách
+     */
+    private function ensureAdvancedColumns(): void
+    {
+        try {
+            // Thêm cột new_customer_only nếu chưa có
+            if (!$this->hasColumn('new_customer_only')) {
+                $this->pdo->exec("ALTER TABLE {$this->table} ADD COLUMN new_customer_only TINYINT(1) NOT NULL DEFAULT 0");
+            }
+            // Thêm cột per_user_limit nếu chưa có
+            if (!$this->hasColumn('per_user_limit')) {
+                $this->pdo->exec("ALTER TABLE {$this->table} ADD COLUMN per_user_limit INT NULL DEFAULT NULL");
+            }
+        } catch (Throwable $e) {
+            // Bỏ qua nếu không thể ALTER TABLE (quyền hạn/khác biệt phiên bản)
+        }
+        // Làm mới cache danh sách cột
+        $this->existingColumns = null;
     }
     
     /**
@@ -567,7 +591,36 @@ class CouponModel extends BaseModel
             'status' => $data['status'] ?? 'active',
         ]);
         
-        return (int)$this->pdo->lastInsertId();
+        $couponId = (int)$this->pdo->lastInsertId();
+        
+        // Cập nhật các cột nâng cao nếu có trong schema
+        try {
+            $updates = [];
+            $params = ['coupon_id' => $couponId];
+            
+            if ($this->hasColumn('new_customer_only') && isset($data['new_customer_only'])) {
+                $updates[] = "new_customer_only = :new_customer_only";
+                $params['new_customer_only'] = (int)!empty($data['new_customer_only']) ? 1 : 0;
+            }
+            if ($this->hasColumn('per_user_limit')) {
+                // Nếu chọn "chỉ khách mới" mà không truyền per_user_limit, mặc định = 1
+                $perUserLimit = $data['per_user_limit'] ?? ( (!empty($data['new_customer_only'])) ? 1 : null );
+                if ($perUserLimit !== null) {
+                    $updates[] = "per_user_limit = :per_user_limit";
+                    $params['per_user_limit'] = (int)$perUserLimit;
+                }
+            }
+            
+            if (!empty($updates)) {
+                $sqlUpdate = "UPDATE {$this->table} SET " . implode(", ", $updates) . " WHERE coupon_id = :coupon_id";
+                $stmt2 = $this->pdo->prepare($sqlUpdate);
+                $stmt2->execute($params);
+            }
+        } catch (Throwable $e) {
+            // Bỏ qua nếu không cập nhật được các cột nâng cao
+        }
+        
+        return $couponId;
     }
 
     /**
@@ -609,6 +662,33 @@ class CouponModel extends BaseModel
             'usage_limit' => $data['usage_limit'] ?? null,
             'status' => $data['status'] ?? 'active',
         ]);
+        
+        // Cập nhật các cột nâng cao nếu tồn tại
+        try {
+            $updates = [];
+            $params = ['coupon_id' => $couponId];
+            
+            if ($this->hasColumn('new_customer_only') && isset($data['new_customer_only'])) {
+                $updates[] = "new_customer_only = :new_customer_only";
+                $params['new_customer_only'] = (int)!empty($data['new_customer_only']) ? 1 : 0;
+            }
+            if ($this->hasColumn('per_user_limit')) {
+                // Nếu chọn "chỉ khách mới" mà không truyền per_user_limit, mặc định = 1
+                $perUserLimit = $data['per_user_limit'] ?? ( (!empty($data['new_customer_only'])) ? 1 : null );
+                if ($perUserLimit !== null) {
+                    $updates[] = "per_user_limit = :per_user_limit";
+                    $params['per_user_limit'] = (int)$perUserLimit;
+                }
+            }
+            
+            if (!empty($updates)) {
+                $sqlUpdate = "UPDATE {$this->table} SET " . implode(", ", $updates) . " WHERE coupon_id = :coupon_id";
+                $stmt2 = $this->pdo->prepare($sqlUpdate);
+                $stmt2->execute($params);
+            }
+        } catch (Throwable $e) {
+            // Bỏ qua nếu không cập nhật được các cột nâng cao
+        }
     }
 
     /**
@@ -700,7 +780,18 @@ class CouponModel extends BaseModel
         return $coupons;
     }
 
-    // Thống kê mã giảm giá
+    /**
+     * Thống kê tổng quan về mã giảm giá trong một khoảng thời gian.
+     *
+     * - Nếu có bảng `coupon_usage` sẽ thống kê theo bảng này,
+     *   nếu không sẽ fallback sang bảng `orders_new`.
+     * - Trả về:
+     *   + usage_count   : tổng số lượt dùng mã trong khoảng thời gian.
+     *   + total_discount: tổng số tiền đã giảm cho khách.
+     *   + expired_count : số mã đã hết hạn (tính tại thời điểm hiện tại).
+     * - Được dùng ở `AdminStatisticsController` để hiển thị box
+     *   "Thống Kê Mã Giảm Giá" trong trang thống kê admin.
+     */
     public function getCouponStats(string $fromDate, string $toDate): array
     {
         try {
@@ -754,7 +845,12 @@ class CouponModel extends BaseModel
         }
     }
 
-    // Lấy top mã giảm giá được sử dụng nhiều nhất
+    /**
+     * Lấy danh sách top mã giảm giá được sử dụng nhiều nhất.
+     *
+     * - Ưu tiên đọc từ bảng `coupon_usage`, nếu không có thì lấy trực tiếp từ `orders_new`.
+     * - Dùng cho bảng "Top 5 Mã Được Dùng Nhiều" trong phần thống kê mã giảm giá.
+     */
     public function getTopUsedCoupons(string $fromDate, string $toDate, int $limit = 5): array
     {
         try {

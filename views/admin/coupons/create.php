@@ -165,8 +165,15 @@ document.addEventListener('DOMContentLoaded', function() {
             perUserLimit.value = 1;
             perUserLimit.readOnly = true;
             returnOnRefund.checked = true;
+            // Thêm tooltip hoặc ghi chú
+            perUserLimit.title = 'Tự động set 1 lượt cho khách mới';
         } else {
             perUserLimit.readOnly = false;
+            perUserLimit.title = '';
+            // Nếu giá trị đang là 1 (do trước đó check) thì reset về rỗng
+            if (perUserLimit.value === '1') {
+                perUserLimit.value = '';
+            }
         }
     }
 
@@ -216,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (newCustomerOnly) {
         newCustomerOnly.addEventListener('change', syncNewCustomerLock);
-        syncNewCustomerLock();
+        syncNewCustomerLock(); // Chạy lần đầu để set giá trị ban đầu
     }
 
     // Handle unlimited end date checkbox
