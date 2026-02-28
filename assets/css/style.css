@@ -9398,11 +9398,44 @@ input[type="number"] {
     width: 80px;
     height: 80px;
     object-fit: cover;
+    object-position: center;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
     display: block !important;
+    margin: 0 auto;
     opacity: 1 !important;
     visibility: visible !important;
+}
+.admin-table td.product-image-cell {
+    vertical-align: middle !important;
+}
+.admin-table .product-image-frame {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.admin-table .product-image-frame .product-image {
+    width: 100%;
+    height: 100%;
+}
+.admin-table .product-image-frame .placeholder-80-box {
+    width: 100%;
+    height: 100%;
+}
+.admin-table .admin-product-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    display: block;
 }
 .action-buttons {
     display: flex;
@@ -10675,4 +10708,38 @@ img[id="pmProductImage"] {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
+}
+
+/* Admin products table: lock image alignment in image column */
+.admin-table tbody td.product-image-cell {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+.admin-table tbody td.product-image-cell .product-image-frame {
+    width: 80px !important;
+    height: 80px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+}
+
+.admin-table tbody td.product-image-cell img,
+.admin-table tbody td.product-image-cell .admin-product-image {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    margin: 0 !important;
+    display: block !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    transform: none !important;
 }

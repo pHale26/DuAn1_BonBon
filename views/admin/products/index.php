@@ -202,14 +202,16 @@ foreach ($products as $p) {
                 ?>
                     <tr>
                         <td><strong><?= htmlspecialchars($product['product_id']) ?></strong></td>
-                        <td>
-                            <?php if (!empty($product['image_url'])): ?>
-                                <img src="<?= htmlspecialchars($product['image_url']) ?>" alt="<?= htmlspecialchars($product['product_name']) ?>" class="product-image">
-                            <?php else: ?>
-                                <div class="placeholder-80-box">
-                                    <i class="bi bi-image"></i>
-                                </div>
-                            <?php endif; ?>
+                        <td class="product-image-cell">
+                            <div class="product-image-frame">
+                                <?php if (!empty($product['image_url'])): ?>
+                                    <img src="<?= htmlspecialchars($product['image_url']) ?>" alt="<?= htmlspecialchars($product['product_name']) ?>" class="admin-product-image">
+                                <?php else: ?>
+                                    <div class="placeholder-80-box">
+                                        <i class="bi bi-image"></i>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         </td>
                         <td>
                             <div class="product-name"><?= htmlspecialchars($product['product_name']) ?></div>

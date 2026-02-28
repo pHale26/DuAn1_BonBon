@@ -11,7 +11,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="<?= BASE_URL ?>/assets/css/style.css" rel="stylesheet">
+    <?php
+    $adminStylePath = PATH_ROOT . 'assets/css/style.css';
+    $adminStyleVersion = file_exists($adminStylePath) ? filemtime($adminStylePath) : time();
+    ?>
+    <link href="<?= BASE_URL ?>/assets/css/style.css?v=<?= $adminStyleVersion ?>" rel="stylesheet">
 </head>
 <body>
     <header class="admin-header">
