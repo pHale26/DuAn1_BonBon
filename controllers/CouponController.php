@@ -52,14 +52,14 @@ class CouponController
             $userModel = new UserModel();
 
             if (method_exists($orderModel, 'countValidOrders')) {
-                $isNewCustomer = $orderModel->countValidOrders((int)$userId) === 0;
-            } elseif (method_exists($orderModel, 'countDeliveredOrders')) {
+                $isNewCustomer = $orderModel->countValidOrders((int)$userId) === 0; // đơn hàng hợp lệ
+            } elseif (method_exists($orderModel, 'countDeliveredOrders')) { // đơn hàng giao thành công
                 $isNewCustomer = $orderModel->countDeliveredOrders((int)$userId) === 0;
             }
 
             $userRank = $userModel->getRank((int)$userId) ?? 'customer';
             $hasVipOrder = method_exists($orderModel, 'hasDeliveredOrderOverAmount')
-                ? $orderModel->hasDeliveredOrderOverAmount((int)$userId, 2000000)
+                ? $orderModel->hasDeliveredOrderOverAmount((int)$userId, 2000000) // đơn hàng đã giao trên mức giá nò đó
                 : false;
 
             if ($hasVipOrder && $userRank !== 'VIP') {

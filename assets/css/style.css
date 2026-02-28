@@ -1081,7 +1081,7 @@ body {
     transform: scale(1.02);
 }
 
-.product-card-overlay {
+ .product-card-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -1098,7 +1098,7 @@ body {
 
 .product-card:hover .product-card-overlay {
     opacity: 1;
-}
+} 
 
 .product-card-icon {
     width: 56px;
@@ -7172,14 +7172,14 @@ input[type="number"] {
     border-color: #000;
 }
 
-.product-image-wrapper {
+/* .product-image-wrapper {
     position: relative;
     width: 100%;
     padding-top: 120%;
     overflow: hidden;
     background: #f8f9fa;
     display: block;
-}
+} */
 
 .product-image {
     position: absolute;
@@ -7187,14 +7187,14 @@ input[type="number"] {
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    /* object-fit: cover;
     object-position: center;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    max-width: 100%;
-    max-height: 100%;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); */
+    /* max-width: 100%;
+    max-height: 100%; */
 }
 
-.product-image-placeholder {
+/* .product-image-placeholder {
     position: absolute;
     top: 0;
     left: 0;
@@ -7205,7 +7205,7 @@ input[type="number"] {
     justify-content: center;
     color: #ccc;
     font-size: 3rem;
-}
+} */
 
 .product-overlay {
     position: absolute;
@@ -7226,9 +7226,9 @@ input[type="number"] {
     opacity: 1;
 }
 
-.collection-product-card:hover .product-image {
+/* .collection-product-card:hover .product-image {
     transform: scale(1.1);
-}
+} */
 
 .view-product-btn {
     color: #fff;
@@ -9394,16 +9394,17 @@ input[type="number"] {
     color: #475569;
     font-size: 0.9rem;
 }
-.admin-table .product-image {
+/* .admin-table .product-image {
     width: 80px;
     height: 80px;
     object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    display: block !important;
+    position: static;
+} */
+
+/* .admin-table .product-image:hover {
     opacity: 1 !important;
-    visibility: visible !important;
-}
+    transform: none !important;
+} */
 .action-buttons {
     display: flex;
     gap: 0.5rem;
